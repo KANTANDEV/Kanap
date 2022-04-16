@@ -1,5 +1,5 @@
 
-
+// Je fait une requete global a mon api 
 function fetchApi() {
     fetch(`http://localhost:3000/api/products`)
         .then((rep) => rep.json())
