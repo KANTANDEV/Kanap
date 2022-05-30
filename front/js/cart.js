@@ -10,6 +10,22 @@ let addquantity;
 let input;
 let totalQuantity;
 let totalPrice;
+// Variables formulaire
+let testfirstName;
+let firstNameInput;
+
+let testlastName;
+let lastNameInput;
+
+let testadresse;
+let adresseInput;
+
+let testcity;
+let cityInput;
+
+let testemail;
+let emailInput;
+
 // ---------------------------------------------------------------FONCTIONS--------------------------------------------------------------------------------------
 function viewBasket(data, element) {
     // getNumberProduct(data)
@@ -86,7 +102,7 @@ function viewBasket(data, element) {
             }
         })
     })
-    
+
     // Evenement qui supprime un article 
     deleteItem.addEventListener('click', (e) => {
 
@@ -104,7 +120,7 @@ function viewBasket(data, element) {
                 CartItemContentSettingsDelete.remove(deleteItem)
                 saveBasket(basket)
                 getNumberProduct(element)
-                
+
             }
         }
     })
@@ -131,29 +147,141 @@ function saveBasket(basket) {
 function getNumberProduct() {
     a = 0
     b = 0
-    c =  fetch(`http://localhost:3000/api/products`)
-    .then((rep) => rep.json())
-    .then((data) => {
-        console.log(data)
-    for(let p = 0; p <  basket.length; p++){
-        let s = 0
-        while(data[s]._id != basket[p]._id){
-            s++
-        }
-        b += Number(basket[p].quantity) * Number(data[s].price)
-        console.log(b)
+    c = fetch(`http://localhost:3000/api/products`)
+        .then((rep) => rep.json())
+        .then((data) => {
+            for (let p = 0; p < basket.length; p++) {
+                let s = 0
+                while (data[s]._id != basket[p]._id) {
+                    s++
+                }
+                b += Number(basket[p].quantity) * Number(data[s].price)
+            }
+            for (let q = 0; q < basket.length; q++) {
+                a += Number(basket[q].quantity)
+            }
+            document.getElementById('totalQuantity').innerHTML = a;
+            document.getElementById('totalPrice').innerHTML = b;
+        })
+        .catch((error) => console.log(error));
+
+}
+// Fonction qui sera appeler quand l'utilisateur passera se commande
+function confirmation(basket){
+    // Ont recupere le panier
+    if (basket === null) {
+        return [];
+    } else {
+        return JSON.parse(basket);
     }
-    for(let q = 0;q < basket.length; q++){
-        a += Number(basket[q].quantity)
-        console.log(a)
-    }
-    document.getElementById('totalQuantity').innerHTML = a;
-    document.getElementById('totalPrice').innerHTML = b;
-    })
-    .catch((error) => console.log(error));
 
 }
 
+
+
 getBasket()
 
+// On va chercher des elements dans le DOM
+let firstName = document.getElementById("firstName");
+let lastName = document.getElementById("lastName");
+let address = document.getElementById("address");
+let city = document.getElementById("city");
+let email = document.getElementById("email");
+const firstNameErrorMsg = document.getElementById("firstNameErrorMsg");
+const lastNameErrorMsg = document.getElementById("lastNameErrorMsg");
+const addressErrorMsg = document.getElementById("addressErrorMsg");
+const cityErrorMsg = document.getElementById("cityErrorMsg");
+const emailErrorMsg = document.getElementById("emailErrorMsg");
+const order = document.getElementById("order");
+// on cree des variables contenant nos regex afin de controler les information saiais par l'utilisateur 
+const regexName = /[a-zA-Z ][a-zA-Z ][a-zA-Z]{1,20}/g;
+const regexOther = /[a-z0-9]{1,20}/g;
+const regexMail = /[A-z0-9-.]{1,}[@][A-z-]{2,}[.][A-z]{2,}/g;
+
+order.addEventListener('click', (e) => {
+    e.preventDefault()
+    // on cree des evenement pour recuperer et controle les donnees saisis par l'utilisateur 
+    firstName.addEventListener('input', (e) => {
+        firstNameInput = e.target.value;
+        testfirstName = regexName.test(firstNameInput);
+    })
+
+    lastName.addEventListener('input', (e) => {
+        lastNameInput = e.target.value;
+        testlastName = regexName.test(lastNameInput);
+    });
+
+    address.addEventListener('input', (e) => {
+        adresseInput = e.target.value;
+        testadresse = regexOther.test(adresseInput);
+    });
+
+    city.addEventListener('input', (e) => {
+        cityInput = e.target.value;
+        testcity = regexOther.test(cityInput);
+
+    });
+
+    email.addEventListener('input', (e) => {
+        emailInput = e.target.value;
+        testemail = regexMail.test(emailInput);
+    });
+    // on verifie le panier
+    if (basket.length === 0) {
+        alert('Votre Panier est vide !')
+        // on verifie les informations entree par l'utilisateur
+    } else if (firstNameInput || lastNameInput || testlastName || testlastName || testlastName === null) {
+        alert('Merci de remplir les champs requis')
+        firstNameErrorMsg.textContent = 'Veuillez renseigner votre prenom';
+        lastNameErrorMsg.textContent = 'Veuillez renseignez votre nom'
+        addressErrorMsg.textContent = 'Veuillez renseignez votre adresse'
+        cityErrorMsg.textContent = 'Veuillez renseignez votre ville'
+        emailErrorMsg.textContent = 'Veuillez renseignez votre adresse email et respecter le format (exemple@domaine.fr)'
+    } else if (testfirstName === false || "") {
+        firstNameErrorMsg.textContent = 'Veuillez renseigner votre prenom';
+    } else if (testlastName === false || "") {
+        lastNameErrorMsg.textContent = 'Veuillez renseignez votre nom'
+    } else if (testadresse === false || "") {
+        addressErrorMsg.textContent = 'Veuillez renseignez votre adresse'
+    } else if (testcity === false || "") {
+        cityErrorMsg.textContent = 'Veuillez renseignez votre ville'
+    } else if (testemail === false || "") {
+        emailErrorMsg.textContent = 'Veuillez renseignez votre adresse email et respecter le format (exemple@domaine.fr)'
+    } else {
+        // on cree un objet regroupant les informations de l'utilisateur et le panier 
+        customerInfo = { "firstName": firstNameInput, "lastName": lastNameInput, "address": adresseInput, "city": cityInput, "email": emailInput }
+        let sendBasket = [{ 'contact': customerInfo, 'Product': basket }]
+        console.log(basket)
+        // on pousse les produits de notre panier dans customerBasket
+        for (let e = 0; e < basket.length; e++) {
+            sendBasket.push(basket[e]._id)
+        }
+        fetch("http://localhost:3000/api/products/order", {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+                'Content-type': 'application/json'
+            },
+            body: JSON.stringify(sendBasket)
+        })
+
+            .then(function (res) {
+                if (res.ok) {
+                    return res.json();
+                }
+            })
+
+            .then((commandId) => {
+                location.href = 'confirmation.html?id=${commandId.orderId}';
+            })
+
+
+            .catch(function (err) {
+                console.error(err)
+                alert("souci avec le serveur : réessayez ultérieurement")
+            })
+
+    }
+
+});
 
