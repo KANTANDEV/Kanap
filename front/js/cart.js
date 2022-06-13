@@ -1,6 +1,6 @@
 // -----------------------------------------------------DECLARATION DES VARIABLES GLOBAL---------------------------------------------------------------------------------
-let a = 0;
-let b = 0;
+let price = 0;
+let quantity = 0;
 let basket;
 let idproduct;
 let colorproduct;
@@ -28,7 +28,6 @@ let emailInput;
 
 // ---------------------------------------------------------------FONCTIONS--------------------------------------------------------------------------------------
 function viewBasket(data, element) {
-    // getNumberProduct(data)
     // On va chercher des elements dans le DOM
     const section = document.getElementById('cart__items')
     totalQuantity = document.getElementById('totalQuantity')
@@ -145,8 +144,8 @@ function saveBasket(basket) {
 }
 // Fonction qui effectue le calcul de la quantite et du montant 
 function getNumberProduct() {
-    a = 0
-    b = 0
+    price = 0
+    quantity = 0
     c = fetch(`http://localhost:3000/api/products`)
         .then((rep) => rep.json())
         .then((data) => {
@@ -155,13 +154,13 @@ function getNumberProduct() {
                 while (data[s]._id != basket[p]._id) {
                     s++
                 }
-                b += Number(basket[p].quantity) * Number(data[s].price)
+                price += Number(basket[p].quantity) * Number(data[s].price)
             }
             for (let q = 0; q < basket.length; q++) {
-                a += Number(basket[q].quantity)
+                quantity += Number(basket[q].quantity)
             }
-            document.getElementById('totalQuantity').innerHTML = a;
-            document.getElementById('totalPrice').innerHTML = b;
+            document.getElementById('totalQuantity').innerHTML = quantity;
+            document.getElementById('totalPrice').innerHTML = price;
         })
         .catch((error) => console.log(error));
 
@@ -198,63 +197,68 @@ const regexName = /[a-zA-Z ][a-zA-Z ][a-zA-Z]{1,20}/g;
 const regexOther = /[a-z0-9]{1,20}/g;
 const regexMail = /[A-z0-9-.]{1,}[@][A-z-]{2,}[.][A-z]{2,}/g;
 
-order.addEventListener('click', (e) => {
-    e.preventDefault()
     // on cree des evenement pour recuperer et controle les donnees saisis par l'utilisateur 
     firstName.addEventListener('input', (e) => {
-        firstNameInput = e.target.value;
-        testfirstName = regexName.test(firstNameInput);
-    })
+        firstNameInput = e.target.value
+        testfirstName = regexName.test(firstNameInput)
+        return;
+    });
 
     lastName.addEventListener('input', (e) => {
         lastNameInput = e.target.value;
         testlastName = regexName.test(lastNameInput);
+        return;
     });
 
     address.addEventListener('input', (e) => {
         adresseInput = e.target.value;
         testadresse = regexOther.test(adresseInput);
+        return;
     });
 
     city.addEventListener('input', (e) => {
         cityInput = e.target.value;
         testcity = regexOther.test(cityInput);
-
+        return;
     });
 
     email.addEventListener('input', (e) => {
         emailInput = e.target.value;
         testemail = regexMail.test(emailInput);
+        return;
     });
     // on verifie le panier
+    order.addEventListener('click', (e) => {
+        e.preventDefault()
     if (basket.length === 0) {
         alert('Votre Panier est vide !')
         // on verifie les informations entree par l'utilisateur
-    } else if (firstNameInput || lastNameInput || testlastName || testlastName || testlastName === null) {
+    } else if (testfirstName == null || testlastName == null || testadresse == null || testcity == null || testemail == null) {
         alert('Merci de remplir les champs requis')
         firstNameErrorMsg.textContent = 'Veuillez renseigner votre prenom';
         lastNameErrorMsg.textContent = 'Veuillez renseignez votre nom'
         addressErrorMsg.textContent = 'Veuillez renseignez votre adresse'
         cityErrorMsg.textContent = 'Veuillez renseignez votre ville'
         emailErrorMsg.textContent = 'Veuillez renseignez votre adresse email et respecter le format (exemple@domaine.fr)'
-    } else if (testfirstName === false || "") {
+    } else if (testfirstName === false) {
         firstNameErrorMsg.textContent = 'Veuillez renseigner votre prenom';
-    } else if (testlastName === false || "") {
+    } else if (testlastName === false) {
         lastNameErrorMsg.textContent = 'Veuillez renseignez votre nom'
-    } else if (testadresse === false || "") {
+    } else if (testadresse === false) {
         addressErrorMsg.textContent = 'Veuillez renseignez votre adresse'
-    } else if (testcity === false || "") {
+    } else if (testcity === false) {
         cityErrorMsg.textContent = 'Veuillez renseignez votre ville'
-    } else if (testemail === false || "") {
+    } else if (testemail === false) {
         emailErrorMsg.textContent = 'Veuillez renseignez votre adresse email et respecter le format (exemple@domaine.fr)'
     } else {
         // on cree un objet regroupant les informations de l'utilisateur et le panier 
-        customerInfo = { "firstName": firstNameInput, "lastName": lastNameInput, "address": adresseInput, "city": cityInput, "email": emailInput }
-        let sendBasket = [{ 'contact': customerInfo, 'Product': basket }]
-        console.log(basket)
+        contact = { "firstName": firstNameInput, "lastName": lastNameInput, "address": adresseInput, "city": cityInput, "email": emailInput }
+        let products = []
+        let sendBasket = {contact, products}
         // on pousse les produits de notre panier dans customerBasket
         for (let e = 0; e < basket.length; e++) {
-            sendBasket.push(basket[e]._id)
+            products.push(basket[e]._id)
+            console.log(products)
         }
         fetch("http://localhost:3000/api/products/order", {
             method: "POST",
@@ -272,7 +276,7 @@ order.addEventListener('click', (e) => {
             })
 
             .then((commandId) => {
-                location.href = 'confirmation.html?id=${commandId.orderId}';
+                location.href = `confirmation.html?id=${commandId.orderId}`;
             })
 
 
@@ -284,4 +288,3 @@ order.addEventListener('click', (e) => {
     }
 
 });
-
